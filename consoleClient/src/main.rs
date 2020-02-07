@@ -8,6 +8,7 @@ struct ResBody {
 }
 
 fn main() {
+    add_item();
     run();
 }
 
@@ -64,8 +65,10 @@ fn add_item() -> Result<(), reqwest::Error> {
     let client = reqwest::blocking::Client::new();
     let body = client.post(url.as_str()).send();
 
-    Ok(())
-
+    match body {
+        Ok(body) => { println!("Item added successfully"); Ok(())},
+        Err(_) => {println!("Failed to add item!"); Ok(())}
+    }
 }
 
 fn remove_item() -> Result<(), reqwest::Error> {
@@ -83,5 +86,9 @@ fn remove_item() -> Result<(), reqwest::Error> {
     let client = reqwest::blocking::Client::new();
     let body = client.put(url.as_str()).send();
 
-    Ok(())
+    match body {
+        Ok(body) => { println!("Item removed successfully"); Ok(())},
+        Err(_) => {println!("Failed to remove item!"); Ok(())}
+    }
+
 }
