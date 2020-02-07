@@ -8,7 +8,6 @@ struct ResBody {
 }
 
 fn main() {
-    add_item();
     run();
 }
 
@@ -28,6 +27,12 @@ fn run() {
 
         io::stdout().flush();
         stdin.lock().read_line(&mut selection);
+        match selection.as_str() {
+            "1"  => get_list(),
+            "2" => add_item(),
+            "3" => remove_item(),
+            _ => Ok(())
+        };
     }
 }
 
@@ -41,9 +46,7 @@ fn get_list() -> Result<(), reqwest::Error> {
         for item in &body.groceries {
             println!("{}", item);
         }
-    }
-    else
-    {
+    } else {
         println!("No items in list");
     }
 
