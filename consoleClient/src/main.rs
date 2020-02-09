@@ -27,11 +27,11 @@ fn run() {
 
         io::stdout().flush();
         stdin.lock().read_line(&mut selection);
-        match selection.as_str() {
-            "1"  => get_list(),
-            "2" => add_item(),
-            "3" => remove_item(),
-            _ => Ok(())
+        match selection.trim() {
+            "1" => {get_list();},
+            "2" => {add_item();},
+            "3" => {remove_item();},
+            _ => ()
         };
     }
 }
