@@ -1,4 +1,4 @@
-#![recursion_limit = "128"]
+  #![recursion_limit = "128"]
 use yew::{html, Component, ComponentLink, Html, InputData, ShouldRender, services::fetch::*};
 use yew::format::{Json, Nothing};
 use yew::services::Task;
