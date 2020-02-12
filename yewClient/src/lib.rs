@@ -1,10 +1,10 @@
-  #![recursion_limit = "128"]
+  #![recursion_limit = "256"]
 use yew::{html, Component, ComponentLink, Html, InputData, ShouldRender, services::fetch::*};
 use yew::format::{Json, Nothing};
 use yew::services::Task;
 use failure::Error;
 
-pub struct Model {
+  pub struct Model {
     link: ComponentLink<Self>,
     fetch_service: FetchService,
     value: String,
@@ -18,6 +18,7 @@ pub enum Msg {
     Clicked,
     Add,
     Ignore,
+    Remove,
 }
 
 impl Component for Model {
@@ -56,12 +57,35 @@ impl Component for Model {
                     },
                 );
 
-                let request = Request::post("127.0.0.1/add/apples").body(Nothing).unwrap();
+                let mut uri = "http://127.0.0.1:8000/add/".to_string();
+                uri.push_str(&self.value);
+                let request = Request::post(uri.as_str()).body(Nothing).unwrap();
+                let task = self.fetch_service.fetch(request,callback);
+            }
+
+            Msg::Remove => {
+                self.fetching = true; // 4.
+
+                let callback = self.link.callback(
+                    move |response: Response<Json<Result<String, Error>>>| { // 2.
+                        let (meta, Json(data)) = response.into_parts();
+                        if meta.status.is_success() {
+                            Msg::FetchReady(data)
+                        } else {
+                            Msg::Ignore
+                        }
+                    },
+                );
+
+                let mut uri = "http://127.0.0.1:8000/remove/".to_string();
+                uri.push_str(&self.value);
+                let request = Request::put(uri.as_str()).body(Nothing).unwrap();
                 let task = self.fetch_service.fetch(request,callback);
             }
             _ => {
                 true;
             }
+
         }
         true
     }
@@ -75,8 +99,9 @@ impl Component for Model {
                         oninput=self.link.callback(|e: InputData| Msg::GotInput(e.value))
                         placeholder="Type item to add or remove">
                     </textarea>
+                    <input></input>
                     <button onclick=self.link.callback(|_| Msg::Add)>{ "Add Item" }</button>
-                    <button onclick=self.link.callback(|_| Msg::Clicked)>{ "Remove Item" }</button>
+                    <button onclick=self.link.callback(|_| Msg::Remove)>{ "Remove Item" }</button>
                 </div>
                 <div>
                     {&self.value}
