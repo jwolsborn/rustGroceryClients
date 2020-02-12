@@ -5,11 +5,12 @@ use yew::services::Task;
 use failure::Error;
 
   pub struct Model {
-    link: ComponentLink<Self>,
-    fetch_service: FetchService,
-    value: String,
-    fetching: bool,
-}
+      link: ComponentLink<Self>,
+      fetch_service: FetchService,
+      value: String,
+      grocery_list: Vec<String>,
+      fetching: bool
+  }
 
 pub enum Msg {
     FetchData,
@@ -19,6 +20,7 @@ pub enum Msg {
     Add,
     Ignore,
     Remove,
+    GetList,
 }
 
 impl Component for Model {
@@ -29,18 +31,17 @@ impl Component for Model {
         Model {
             fetch_service: FetchService::new(),
             link,
+            grocery_list: Vec::new(),
             value: "".into(),
             fetching: false,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+
         match msg {
             Msg::GotInput(new_value) => {
                 self.value = new_value;
-            }
-            Msg::Clicked => {
-                self.value = "blah blah blah".to_string();
             }
 
             Msg::Add => {
@@ -63,6 +64,24 @@ impl Component for Model {
                 let task = self.fetch_service.fetch(request,callback);
             }
 
+            Msg::GetList => {
+                self.fetching = true; // 4.
+
+                let callback = self.link.callback(
+                    move |response: Response<Json<Result<String, Error>>>| { // 2.
+                        let (meta, Json(data)) = response.into_parts();
+                        if meta.status.is_success() {
+                            Msg::FetchReady(data)
+                        } else {
+                            Msg::Ignore
+                        }
+                    },
+                );
+
+                let request = Request::get("http://127.0.0.1:8000/list").body(Nothing).unwrap();
+                let task = self.fetch_service.fetch(request,callback);
+            }
+
             Msg::Remove => {
                 self.fetching = true; // 4.
 
@@ -82,6 +101,7 @@ impl Component for Model {
                 let request = Request::put(uri.as_str()).body(Nothing).unwrap();
                 let task = self.fetch_service.fetch(request,callback);
             }
+
             _ => {
                 true;
             }
@@ -94,14 +114,16 @@ impl Component for Model {
         html! {
             <div>
                 <div>
-                    <textarea rows=5
+                    <input
                         value=&self.value
                         oninput=self.link.callback(|e: InputData| Msg::GotInput(e.value))
                         placeholder="Type item to add or remove">
-                    </textarea>
-                    <input></input>
-                    <button onclick=self.link.callback(|_| Msg::Add)>{ "Add Item" }</button>
-                    <button onclick=self.link.callback(|_| Msg::Remove)>{ "Remove Item" }</button>
+                    </input>
+                    <div>
+                        <button onclick=self.link.callback(|_| Msg::Add)>{ "Add Item" }</button>
+                        <button onclick=self.link.callback(|_| Msg::Remove)>{ "Remove Item" }</button>
+                        <button onclick=self.link.callback(|_| Msg::GetList)>{ "Get List" }</button>
+                    </div>
                 </div>
                 <div>
                     {&self.value}
